@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeepFake Detector</title>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --success: #4cc9f0;
+            --danger: #f72585;
+            --warning: #f8961e;
+            --info: #4895ef;
+            --dark: #232946;
+            --light: #f8f9fa;
+            --gradient: linear-gradient(135deg, #4361ee, #7209b7);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f5f7ff;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        header {
+            background: var(--gradient);
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            font-size: 1.8rem;
+            font-weight: 700;
+            text-decoration: none;
+            color: white;
+        }
+        
+        .logo i {
+            margin-right: 0.5rem;
+        }
+        
+        .nav-links {
+            display: flex;
+            list-style: none;
+        }
+        
+        .nav-links li {
+            margin-left: 2rem;
+        }
+        
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-links a:hover {
+            color: var(--success);
+        }
+        
+        .mobile-menu {
+            display: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        
+        .hero {
+            padding: 2rem 0;
+            text-align: center;
+            color: white;
+        }
+        
+        .hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .hero p {
+            font-size: 1.1rem;
+            max-width: 700px;
+            margin: 0 auto;
+            opacity: 0.9;
+        }
+        
+        main {
+            padding: 3rem 0;
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card-header {
+            margin-bottom: 1.5rem;
+        }
+        
+        .card-title {
+            font-size: 1.5rem;
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+        }
+        
+        .card-subtitle {
+            color: #777;
+            font-size: 1rem;
+        }
+        
+        .upload-area {
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .upload-area:hover {
+            border-color: var(--primary);
+            background-color: rgba(67, 97, 238, 0.05);
+        }
+        
+        .upload-icon {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+        
+        .upload-text {
+            margin-bottom: 1rem;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 0.8rem 1.5rem;
+            background-color: var(--primary);
+            color: white;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            outline: none;
+            font-size: 1rem;
+        }
+        
+        .btn:hover {
+            background-color: var(--secondary);
+            transform: translateY(-2px);
+        }
+        
+        .btn-success {
+            background-color: var(--success);
+        }
+        
+        .btn-success:hover {
+            background-color: #3aa8d8;
+        }
+        
+        .btn-danger {
+            background-color: var(--danger);
+        }
+        
+        .btn-danger:hover {
+            background-color: #d61875;
+        }
+        
+        .btn-outline {
+            background-color: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+        
+        .btn-outline:hover {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .image-preview {
+            max-width: 100%;
+            max-height: 300px;
+            margin: 1rem auto;
+            border-radius: 8px;
+            display: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+        
+        .feature-card {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .feature-icon {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+        
+        .feature-title {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            color: var(--dark);
+        }
+        
+        .analysis-container {
+            display: none;
+            margin-top: 2rem;
+        }
+        
+        .result-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .result-icon {
+            font-size: 2rem;
+            margin-right: 1rem;
+        }
+        
+        .result-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+        
+        .confidence-meter {
+            margin-bottom: 2rem;
+        }
+        
+        .confidence-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+        
+        .confidence-bar {
+            height: 20px;
+            border-radius: 10px;
+            background-color: #e9ecef;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .confidence-progress {
+            height: 100%;
+            border-radius: 10px;
+            background: linear-gradient(90deg, #4cc9f0, #7209b7);
+            width: 0;
+            transition: width 1s ease-in-out;
+        }
+        
+        .charts-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        
+        .chart-wrapper {
+            flex: 1;
+            min-width: 300px;
+        }
+        
+        .analysis-details {
+            margin-top: 2rem;
+        }
+        
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 1rem 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .detail-item:last-child {
+            border-bottom: none;
+        }
+        
+        .detail-label {
+            font-weight: 500;
+        }
+        
+        .detail-value {
+            font-weight: 600;
+        }
+        
+        .risk-low {
+            color: #38b000;
+        }
+        
+        .risk-medium {
+            color: #f8961e;
+        }
+        
+        .risk-high {
+            color: #f72585;
+        }
+        
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            margin: 2rem 0;
+        }
+        
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top: 4px solid var(--primary);
+            width: 40px;
+            height: 40px;
+            margin: 0 auto 1rem;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        footer {
+            background-color: var(--dark);
+            color: white;
+            padding: 3rem 0;
+            margin-top: 3rem;
+        }
+        
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+        }
+        
+        .footer-section h3 {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+        
+        .footer-links {
+            list-style: none;
+        }
+        
+        .footer-links li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .footer-links a {
+            color: #ddd;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .footer-links a:hover {
+            color: var(--success);
+        }
+        
+        .social-links {
+            display: flex;
+            margin-top: 1rem;
+        }
+        
+        .social-links a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+            margin-right: 0.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .social-links a:hover {
+            background-color: var(--primary);
+            transform: translateY(-3px);
+        }
+        
+        .copyright {
+            text-align: center;
+            padding-top: 2rem;
+            margin-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                width: 100%;
+                background-color: var(--primary);
+                flex-direction: column;
+                padding: 1rem 0;
+                z-index: 100;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            }
+            
+            .nav-links.active {
+                display: flex;
+            }
+            
+            .nav-links li {
+                margin: 0;
+                text-align: center;
+                padding: 0.5rem 0;
+            }
+            
+            .mobile-menu {
+                display: block;
+            }
+            
+            .hero h1 {
+                font-size: 2rem;
+            }
+            
+            .charts-container {
+                flex-direction: column;
+            }
+        }
+
+        .feature-scores {
+            margin-top: 2rem;
+        }
+
+        .feature-score-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-score-bar {
+            height: 10px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+            margin-top: 0.25rem;
+            overflow: hidden;
+        }
+
+        .feature-score-progress {
+            height: 100%;
+            border-radius: 5px;
+            transition: width 1s ease-in-out;
+        }
+
+        /* For real-time camera capture */
+        .camera-container {
+            display: none;
+            margin-top: 1rem;
+        }
+
+        #video {
+            width: 100%;
+            max-width: 500px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .camera-controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        /* Switch for toggling between upload and camera */
+        .toggle-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 250px;
+            height: 40px;
+            border-radius: 20px;
+            background-color: #e9ecef;
+            overflow: hidden;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            transition: 0.4s;
+        }
+
+        .toggle-option {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1;
+            cursor: pointer;
+            font-weight: 500;
+            color: #555;
+        }
+
+        .toggle-background {
+            position: absolute;
+            width: 50%;
+            height: 100%;
+            background: var(--gradient);
+            border-radius: 20px;
+            transition: 0.4s;
+            left: 0;
+        }
+
+        input:checked + .toggle-slider .toggle-background {
+            left: 50%;
+        }
+
+        .toggle-option.active {
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <a href="#" class="logo">
+                    <i class="fas fa-shield-alt"></i> DeepFake Detector
+                </a>
+                <ul class="nav-links">
+                    <li><a href="#"><i class="fas fa-home"></i> Home</a></li>
+                    <li><a href="#features"><i class="fas fa-star"></i> Features</a></li>
+                    <li><a href="#"><i class="fas fa-chart-bar"></i> Dashboard</a></li>
+                    <li><a href="#"><i class="fas fa-info-circle"></i> About</a></li>
+                    <li><a href="#"><i class="fas fa-envelope"></i> Contact</a></li>
+                </ul>
+                <div class="mobile-menu">
+                    <i class="fas fa-bars"></i>
+                </div>
+            </nav>
+            <div class="hero">
+                <h1>Advanced DeepFake Detection System</h1>
+                <p>Using computer vision and machine learning to identify manipulated images and videos with high accuracy</p>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Analyze Media for Manipulation</h2>
+                <p class="card-subtitle">Upload an image or capture from camera to check if it has been manipulated</p>
+            </div>
+
+            <div class="toggle-container">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="input-toggle">
+                    <div class="toggle-slider">
+                        <div class="toggle-option upload active">
+                            <i class="fas fa-upload me-2"></i> Upload
+                        </div>
+                        <div class="toggle-option camera">
+                            <i class="fas fa-camera me-2"></i> Camera
+                        </div>
+                        <div class="toggle-background"></div>
+                    </div>
+                </label>
+            </div>
+
+            <div id="upload-container">
+                <div class="upload-area" id="upload-area">
+                    <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                    <p class="upload-text">Drag & drop your image here or click to browse</p>
+                    <button class="btn btn-outline">Select File</button>
+                </div>
+                <input type="file" class="file-input" id="file-input" accept="image/*">
+                
+                <img id="image-preview" class="image-preview">
+                
+                <div class="text-center">
+                    <button class="btn" id="analyze-btn" disabled>Analyze Image</button>
+                </div>
+            </div>
+
+            <div class="camera-container" id="camera-container">
+                <video id="video" autoplay playsinline></video>
+                <div class="camera-controls">
+                    <button class="btn" id="capture-btn">
+                        <i class="fas fa-camera"></i> Capture
+                    </button>
+                    <button class="btn btn-outline" id="switch-camera-btn">
+                        <i class="fas fa-sync-alt"></i> Switch Camera
+                    </button>
+                </div>
+                <canvas id="canvas" style="display: none;"></canvas>
+            </div>
+
+            <div class="loading-spinner" id="loading-spinner">
+                <div class="spinner"></div>
+                <p>Analyzing image for manipulation...</p>
+            </div>
+
+            <div class="analysis-container" id="analysis-container">
+                <div class="result-header" id="result-header">
+                    <!-- Will be filled by JavaScript -->
+                </div>
+
+                <div class="confidence-meter">
+                    <div class="confidence-label">
+                        <span>Confidence Level</span>
+                        <span id="confidence-percentage">0%</span>
+                    </div>
+                    <div class="confidence-bar">
+                        <div class="confidence-progress" id="confidence-progress"></div>
+                    </div>
+                </div>
+
+                <div class="charts-container">
+                    <div class="chart-wrapper">
+                        <canvas id="feature-chart"></canvas>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="frequency-chart"></canvas>
+                    </div>
+                </div>
+
+                <div class="feature-scores" id="feature-scores">
+                    <h3>Feature Analysis</h3>
+                    <!-- Will be filled by JavaScript -->
+                </div>
+
+                <div class="analysis-details">
+                    <h3>Detection Details</h3>
+                    <div class="detail-item">
+                        <span class="detail-label">Image Resolution</span>
+                        <span class="detail-value" id="resolution-value">1920x1080</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Processing Time</span>
+                        <span class="detail-value" id="processing-time">1.2 seconds</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Algorithm</span>
+                        <span class="detail-value">Computer Vision + Random Forest</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Overall Risk</span>
+                        <span class="detail-value" id="risk-level">Medium</span>
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin-top: 2rem;">
+                    <button class="btn btn-outline" id="reset-btn">
+                        <i class="fas fa-redo"></i> Analyze Another Image
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="features" id="features">
+            <div class="feature-card">
+                <i class="fas fa-fingerprint feature-icon"></i>
+                <h3 class="feature-title">Multiple Detection Methods</h3>
+                <p>Uses 11 different image analysis techniques to detect manipulation signatures.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-brain feature-icon"></i>
+                <h3 class="feature-title">Advanced AI Model</h3>
+                <p>Powered by state-of-the-art machine learning for accurate detection.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-chart-pie feature-icon"></i>
+                <h3 class="feature-title">Detailed Analysis</h3>
+                <p>Get comprehensive breakdown of detection results with visualizations.</p>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>DeepFake Detector</h3>
+                    <p>Advanced technology to detect image and video manipulation using AI.</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-github"></i></a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h3>Quick Links</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">Home</a></li>
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="#">Dashboard</a></li>
+                        <li><a href="#">Documentation</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Resources</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">API</a></li>
+                        <li><a href="#">Research Papers</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Terms of Service</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Contact Us</h3>
+                    <ul class="footer-links">
+                        <li><i class="fas fa-envelope"></i> info@deepfakedetector.com</li>
+                        <li><i class="fas fa-phone"></i> +1 (123) 456-7890</li>
+                        <li><i class="fas fa-map-marker-alt"></i> 123 AI Street, Tech City</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2025 DeepFake Detector. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile menu toggle
+        const mobileMenuBtn = document.querySelector('.mobile-menu');
+        const navLinks = document.querySelector('.nav-links');
+        
+        mobileMenuBtn.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+        });
+        
+        // Upload area functionality
+        const uploadArea = document.getElementById('upload-area');
+        const fileInput = document.getElementById('file-input');
+        const imagePreview = document.getElementById('image-preview');
+        const analyzeBtn = document.getElementById('analyze-btn');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const analysisContainer = document.getElementById('analysis-container');
+        const resultHeader = document.getElementById('result-header');
+        const confidenceProgress = document.getElementById('confidence-progress');
+        const confidencePercentage = document.getElementById('confidence-percentage');
+        const resetBtn = document.getElementById('reset-btn');
+        const processingTime = document.getElementById('processing-time');
+        const resolutionValue = document.getElementById('resolution-value');
+        const riskLevel = document.getElementById('risk-level');
+        const featureScores = document.getElementById('feature-scores');
+        const uploadContainer = document.getElementById('upload-container');
+        const cameraContainer = document.getElementById('camera-container');
+        const inputToggle = document.getElementById('input-toggle');
+        const toggleOptions = document.querySelectorAll('.toggle-option');
+        const captureBtn = document.getElementById('capture-btn');
+        const switchCameraBtn = document.getElementById('switch-camera-btn');
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        
+        let featureChart = null;
+        let frequencyChart = null;
+        let currentStream = null;
+        let facingMode = 'user'; // Default front camera
+        
+        // Toggle between upload and camera
+        inputToggle.addEventListener('change', () => {
+            if (inputToggle.checked) {
+                uploadContainer.style.display = 'none';
+                cameraContainer.style.display = 'block';
+                startCamera();
+                toggleOptions[0].classList.remove('active');
+                toggleOptions[1].classList.add('active');
+            } else {
+                uploadContainer.style.display = 'block';
+                cameraContainer.style.display = 'none';
+                stopCamera();
+                toggleOptions[0].classList.add('active');
+                toggleOptions[1].classList.remove('active');
+            }
+        });
+        
+        // Upload area click handler
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+        
+        // File drag & drop handling
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, highlight, false);
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, unhighlight, false);
+        });
+        
+        function highlight() {
+            uploadArea.classList.add('highlight');
+        }
+        
+        function unhighlight() {
+            uploadArea.classList.remove('highlight');
+        }
+        
+        uploadArea.addEventListener('drop', handleDrop, false);
+        
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            
+            if (files.length) {
+                handleFiles(files);
+            }
+        }
+        
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length) {
+                handleFiles(fileInput.files);
+            }
+        });
+        
+        function handleFiles(files) {
+            const file = files[0];
+            
+            if (!file.type.match('image.*')) {
+                alert('Please select an image file');
+                return;
+            }
+            
+            const reader = new FileReader();
+            
+            reader.onload = (e) => {
+                imagePreview.src = e.target.result;
+                imagePreview.style.display = 'block';
+                analyzeBtn.disabled = false;
+                
+                // Get image dimensions
+                const img = new Image();
+                img.onload = function() {
+                    resolutionValue.textContent = `${this.width}x${this.height}`;
+                };
+                img.src = e.target.result;
+            };
+            
+            reader.readAsDataURL(file);
+        }
+        
+        // Analyze button click handler
+        analyzeBtn.addEventListener('click', () => {
+            analyzeImage();
+        });
+        
+        // Reset button click handler
+        resetBtn.addEventListener('click', () => {
+            resetAnalysis();
+        });
+        
+        // Camera functionality
+        async function startCamera() {
+            try {
+                if (currentStream) {
+                    stopCamera();
+                }
+                
+                const constraints = {
+                    video: {
+                        facingMode: facingMode
+                    }
+                };
+                
+                currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+                video.srcObject = currentStream;
+            } catch (err) {
+                console.error('Error accessing camera:', err);
+                alert('Error accessing camera. Please make sure you have granted camera permissions.');
+            }
+        }
+        
+        function stopCamera() {
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
+                currentStream = null;
+            }
+        }
+        
+        // Switch camera
+        switchCameraBtn.addEventListener('click', () => {
+            facingMode = facingMode === 'user' ? 'environment' : 'user';
+            startCamera();
+        });
+        
+        // Capture image from camera
+        captureBtn.addEventListener('click', () => {
+            const context = canvas.getContext('2d');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            // Convert to image
+            const imageDataUrl = canvas.toDataURL('image/png');
+            imagePreview.src = imageDataUrl;
+            imagePreview.style.display = 'block';
+            
+            // Switch to upload view to show preview
+            inputToggle.checked = false;
+            toggleOptions[0].classList.add('active');
+            toggleOptions[1].classList.remove('active');
+            uploadContainer.style.display = 'block';
+            cameraContainer.style.display = 'none';
+            stopCamera();
+            
+            analyzeBtn.disabled = false;
+            resolutionValue.textContent = `${canvas.width}x${canvas.height}`;
+        });
+        
+        function analyzeImage() {
+            // Show loading spinner
+            loadingSpinner.style.display = 'block';
+            analysisContainer.style.display = 'none';
+            
+            // Simulate processing delay
+            setTimeout(() => {
+                loadingSpinner.style.display = 'none';
+                
+                // Simulate random result (real demo would have actual analysis)
+                const isFake = Math.random() > 0.5;
+                const confidenceScore = isFake ? 
+                    75 + Math.floor(Math.random() * 25) : 
+                    20 + Math.floor(Math.random() * 30);
+                
+                displayResults(isFake, confidenceScore);
+                
+                analysisContainer.style.display = 'block';
+                
+                // Scroll to results
+                analysisContainer.scrollIntoView({ behavior: 'smooth' });
+            }, 2000 + Math.random() * 1000); // Random delay between 2-3 seconds
+        }
+        
+        function displayResults(isFake, confidenceScore) {
+            // Set result header
+            if (isFake) {
+                resultHeader.innerHTML = `
+                    <i class="fas fa-exclamation-triangle result-icon" style="color: var(--danger);"></i>
+                    <h2 class="result-title" style="color: var(--danger);">DeepFake Detected</h2>
+                `;
+                riskLevel.textContent = 'High';
+                riskLevel.className = 'detail-value risk-high';
+            } else {
+                resultHeader.innerHTML = `
+                    <i class="fas fa-check-circle result-icon" style="color: var(--success);"></i>
+                    <h2 class="result-title" style="color: var(--success);">Authentic Image</h2>
+                `;
+                riskLevel.textContent = 'Low';
+                riskLevel.className = 'detail-value risk-low';
+            }
+            
+            // Set confidence meter
+            confidenceProgress.style.width = `${confidenceScore}%`;
+            confidencePercentage.textContent = `${confidenceScore}%`;
+            
+            // Set processing time (simulated)
+            const time = (Math.random() * 1.5 + 0.5).toFixed(2);
+            processingTime.textContent = `${time} seconds`;
+            
+            // Create feature scores (simulated)
+            generateFeatureScores(isFake);
+            
+            // Create charts
+            createCharts(isFake);
+        }
+        
+        function generateFeatureScores(isFake) {
+            // Clear previous scores
+            featureScores.innerHTML = '<h3>Feature Analysis</h3>';
+            
+            // Define features
+            const features = [
+                'Edge Consistency',
+                'Texture Analysis',
+                'Laplacian Variance',
+                'DFT Spectral Analysis',
+                'Wavelet Transform',
+                'DCT Coefficient',
+                'Facial Structure',
+                'Geometric Features',
+                'Histogram Analysis',
+                'Lighting Analysis',
+                'Compression Artifacts'
+            ];
+            
+            // Generate random scores based on whether it's fake or not
+            features.forEach(feature => {
+                const baseScore = isFake ? 65 : 25;
+                const variance = 20;
+                const score = baseScore + Math.floor(Math.random() * variance - variance/2);
+                
+                let riskClass;
+                if (score > 70) riskClass = 'risk-high';
+                else if (score > 40) riskClass = 'risk-medium';
+                else riskClass = 'risk-low';
+                
+                const scoreColor = score > 70 ? '#f72585' : score > 40 ? '#f8961e' : '#38b000';
+                
+                const featureScoreItem = document.createElement('div');
+                featureScoreItem.classList.add('feature-score-item');
+                featureScoreItem.innerHTML = `
+                    <div style="flex: 1;">
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>${feature}</span>
+                            <span class="${riskClass}">${score}%</span>
+                        </div>
+                        <div class="feature-score-bar">
+                            <div class="feature-score-progress" style="width: ${score}%; background-color: ${scoreColor};"></div>
+                        </div>
+                    </div>
+                `;
+                
+                featureScores.appendChild(featureScoreItem);
+            });
+        }
+        
+        function createCharts(isFake) {
+            // Destroy previous charts if they exist
+            if (featureChart) featureChart.destroy();
+            if (frequencyChart) frequencyChart.destroy();
+            
+            // Create feature radar chart
+            const featureCtx = document.getElementById('feature-chart').getContext('2d');
+            
+            // Generate data based on if it's fake or not
+            const baseValue = isFake ? 70 : 30;
+            const variance = 20;
+            
+            featureChart = new Chart(featureCtx, {
+                type: 'radar',
+                data: {
+                    labels: [
+                        'Edge Analysis',
+                        'Texture',
+                        'Frequency',
+                        'Metadata',
+                        'Noise Pattern',
+                        'Color Analysis'
+                    ],
+                    datasets: [{
+                        label: 'Feature Scores',
+                        data: Array(6).fill(0).map(() => baseValue + Math.floor(Math.random() * variance - variance/2)),
+                        backgroundColor: 'rgba(67, 97, 238, 0.2)',
+                        borderColor: 'rgb(67, 97, 238)',
+                        pointBackgroundColor: 'rgb(67, 97, 238)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgb(67, 97, 238)'
+                    }]
+                },
+                options: {
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Feature Analysis Breakdown'
+                        }
+                    },
+                    scales: {
+                        r: {
+                            angleLines: {
+                                display: true
+                            },
+                            suggestedMin: 0,
+                            suggestedMax: 100
+                        }
+                    }
+                }
+            });
+            
+            // Create frequency domain chart
+            const freqCtx = document.getElementById('frequency-chart').getContext('2d');
+            
+            // Generate random frequency data
+            const freqLabels = Array(15).fill(0).map((_, i) => `${i+1}`);
+            const realData = [65, 59, 80, 81, 56, 55, 40, 30, 28, 48, 40, 19, 86, 27, 90].map(
+                v => Math.max(0, v + (Math.random() * 20 - 10))
+            );
+            const fakeData = [28, 48, 40, 19, 96, 27, 100, 30, 28, 48, 40, 19, 86, 27, 90].map(
+                v => Math.max(0, v + (Math.random() * 20 - 10))
+            );
+            
+            frequencyChart = new Chart(freqCtx, {
+                type: 'line',
+                data: {
+                    labels: freqLabels,
+                    datasets: [
+                        {
+                            label: 'Current Image',
+                            data: isFake ? fakeData : realData,
+                            borderColor: 'rgb(75, 192, 192)',
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            tension: 0.3,
+                            fill: true
+                        },
+                        {
+                            label: 'Typical DeepFake',
+                            data: fakeData,
+                            borderColor: 'rgb(255, 99, 132)',
+                            backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                            borderDash: [5, 5],
+                            tension: 0.3,
+                            fill: false
+                        },
+                        {
+                            label: 'Typical Real Image',
+                            data: realData,
+                            borderColor: 'rgb(54, 162, 235)',
+                            backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                            borderDash: [5, 5],
+                            tension: 0.3,
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Frequency Domain Analysis'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+        
+        function resetAnalysis() {
+            // Reset form
+            fileInput.value = '';
+            imagePreview.style.display = 'none';
+            analyzeBtn.disabled = true;
+            
+            // Hide analysis
+            analysisContainer.style.display = 'none';
+            
+            // Scroll to top of card
+            document.querySelector('.card').scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
